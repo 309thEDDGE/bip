@@ -1,4 +1,5 @@
 import ctypes
+import numpy as np
 
 """ common value extractions that multiple parsers can implement.
     do consider the payload endianness, and if/when it may be 
@@ -6,24 +7,24 @@ import ctypes
 
 #Current Juliet Implementations
 def bandwidth(word1, word2):
-    raw_data = ctypes.c_uint64((word1 << 32) | word2)
-    return ctypes.c_int64(raw_data.value).value * (10**-6) * (2**-20) 
+    raw_data = (np.uint64(word1) << 32) | np.uint64(word2)
+    return np.uint32(raw_data * (10**-6) * (2**-20)) 
 
 def dwell(word1, word2):
-    raw_data = ctypes.c_uint64((word1 << 32) | word2)
+    raw_data = (np.uint64(word1) << 32) | np.uint64(word2)
     # data comes in femtoseconds -9 converts to microseconds
-    return ctypes.c_uint64(raw_data.value).value * (10**-9)  
+    return np.float64(raw_data * (10**-9))  
 
 def frequency(word1, word2):
-    raw_data = ctypes.c_uint64((word1 << 32) | word2)
-    return ctypes.c_int64(raw_data.value).value * (10**-9) * (2**-20)
+    raw_data = (np.uint64(word1) << 32) | np.uint64(word2)
+    return np.float64(raw_data * (10**-9) * (2**-20))
 
 def gain(word1): # needs work, but not implemented in juliet yet
     return word1
 
 def offset(word1, word2):
-    raw_data = ctypes.c_uint64((word1 << 32) | word2)
-    return ctypes.c_int64(raw_data.value).value * (10**-6) * (2**-20) 
+    raw_data = (np.uint64(word1) << 32) | np.uint64(word2)
+    return np.float64(raw_data * (10**-6) * (2**-20))
 
 def pointing_vector(word):
     el = (word >> 16)
@@ -41,10 +42,15 @@ def pointing_vector(word):
     return az, el_out
 
 def sample_rate(word1, word2):
-    raw_data = ctypes.c_uint64((word1 << 32) | word2)
-    return ctypes.c_int64(raw_data.value).value * (10**-6) * (2**-20) 
+    raw_data = (np.uint64(word1) << 32) | np.uint64(word2)
+    return np.uint32(raw_data * (10**-6) * (2**-20)) 
 
 def time(tsi, tsf0, tsf1):
-    return tsi + ((tsf0 << 32) + tsf1) * 1e-12
+    tsf0 = np.uint64(tsf0)
+    tsf1 = np.uint64(tsf1)
+    tsi = np.uint64(tsi)
+
+    return np.float64(np.uint64(tsi) +\
+                    ((np.uint64(tsf0) << 32) + np.uint64(tsf1)) * 10**-12)
 
 

@@ -57,7 +57,7 @@ def test_data_packet(simple_data_packet):
     assert packet.fractional_timestamp[1] == 0x10000000
     assert packet.trailer[0] == 0xAAAAAAAA
     assert packet.trailer[1] == 0xFFFFFFFF
-    assert packet.time == 1218456.504606846976
+    assert packet.time == 65535.000268435455
 
 
 def test_data_packet_data(simple_data_packet):
@@ -166,7 +166,7 @@ def test_data_packet_wrong_size(simple_data_packet_wrong_size):
     assert packet.fractional_timestamp[1] == 0x10000000
     assert packet.trailer[0] == 0xAAAAAAAA
     assert packet.trailer[1] == 0xFFFFFFFF
-    assert packet.time == 1218456.504606846976
+    assert packet.time == 65535.000268435455
 
 def test_data_packet_wrong_size_data(simple_data_packet_wrong_size):
     packet = DataPacket(simple_data_packet_wrong_size[1], 7)

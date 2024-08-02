@@ -86,7 +86,7 @@ def test_dcp_packet(simple_dcp_packet):
     assert packet.fractional_timestamp[1] == 0x10000000
     assert packet.sampling_rate == 160
     assert packet.dwell == 20018823430144 * 10 **-9#((0x00001234 << 32) + 0xFEDC0000) * 10**-9
-    assert packet.freq == -1 * 10**-9
+    assert packet.freq == 17592.186044415
     assert packet.rfFreqOffset == 46707769494.3125 * (10**-9)
     assert packet.beamWidth == 0
     assert packet.gain == 0x5
@@ -167,7 +167,7 @@ def test_dcp_packet_II(simple_dcp_packet_II):
     assert packet.fractional_timestamp[1] == 0x10000000
     assert packet.sampling_rate == 160
     assert int(packet.dwell) == 4000 # easier to round it off
-    assert packet.freq == -0.95367431640625 * (10**-6) * (10**-9)
+    assert packet.freq == 17592.186044416
     assert packet.rfFreqOffset == 46707769494.3125 * (10**-9)
     assert packet.beamWidth == 0
     assert packet.gain == 0x3

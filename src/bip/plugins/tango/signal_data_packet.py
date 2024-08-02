@@ -4,6 +4,7 @@ import pyarrow as pa
 import numpy as np
 
 from bip.vita import SignalDataPacket
+from bip.common import bit_manipulation
 
 
 _schema = [
@@ -61,7 +62,7 @@ class _SignalDataPacket(SignalDataPacket):
         super().__init__(payload, payload_size = payload_size, vendor = 'Tango')
         tsi = self.integer_timestamp
         tsf0, tsf1 = self.fractional_timestamp
-        self.time = tsi + ( (int(tsf1) << 32) + tsf0) *1e-12
+        self.time = bit_manipulation.time(tsi, tsf0, tsf1)
         
         if ("{stream_id}" in context_key):
             self.context_packet_key = context_key.format(stream_id=self.stream_id)
