@@ -1,8 +1,9 @@
 import numpy as np
 
+
 class ClassIdentifier:
     def __init__(self, class_id: np.ndarray):
-        assert(len(class_id) == 2)
+        assert (len(class_id) == 2)
         self._data = class_id
 
     @property
@@ -20,4 +21,3 @@ class ClassIdentifier:
     @property
     def packet_class_code(self) -> int:
         return self._data[1] & 0xFFFF
-

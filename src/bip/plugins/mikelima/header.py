@@ -3,6 +3,7 @@ import datetime
 from typing import Optional
 from bip.non_vita import mblb
 
+
 def _som_search(b: bytes) -> Optional[bool]:
     '''
     Method to confirm presence of the header marker
@@ -42,11 +43,12 @@ def determine_timestamps(header: bytearray):
     epoch_string = f"{year}-{month}-{day}_{h}:{m}:{s}.{us}"
     time_format = '%Y-%m-%d_%H:%M:%S.%f'
 
-    epoch = datetime.datetime.strptime(epoch_string,time_format).timestamp()
+    epoch = datetime.datetime.strptime(epoch_string, time_format).timestamp()
 
-    return int(epoch*(10**6)), int(timestamp_from_header)
+    return int(epoch * (10**6)), int(timestamp_from_header)
 
-def determine_iq_session_increment(header:bytearray):
+
+def determine_iq_session_increment(header: bytearray):
     '''
     This function asuumes that the full file path of the bin file will appear
     in ascii at the start of the bin file.
@@ -68,6 +70,7 @@ def determine_iq_session_increment(header:bytearray):
 
     return int(IQ[2]), int(session[5:8]), int(increment[0])
 
+
 def unpack_som(header_bytes: bytes, stream: RawIOBase):
     '''
     This method unpacks the SOM header
@@ -78,18 +81,20 @@ def unpack_som(header_bytes: bytes, stream: RawIOBase):
         raise RuntimeError("unexpected SOM format")
 
     # 3 lanes of 4 words plus 24 SDW is 36 8-byte words
-    bytes_out = bytearray(36*8)
+    bytes_out = bytearray(36 * 8)
 
-    number_of_bytes_read= stream.readinto(bytes_out)
-    if number_of_bytes_read != (36*8):
-        raise RuntimeError('Stop, unexpected number_of_bytes_read in unpack_SOM')
+    number_of_bytes_read = stream.readinto(bytes_out)
+    if number_of_bytes_read != (36 * 8):
+        raise RuntimeError(
+            'Stop, unexpected number_of_bytes_read in unpack_SOM')
 
     return bytes_out, number_of_bytes_read
+
 
 def read_first_header(stream: RawIOBase):
     orphan_packet_list = []
     header = bytearray()
-    #read first 8 byte word
+    # read first 8 byte word
     buffer = stream.read(8)
     while True:
         try:
@@ -98,10 +103,10 @@ def read_first_header(stream: RawIOBase):
         except Exception:
             if buffer == bytes.fromhex('F17FFF7FFF7FFF7F'):
                 orphan_packet = bytearray()
-                #16 bytes are the headers for the other 2 lanes
-                #Packet headers consist of 4 8-byte words
-                #Each of the 3 lanes have their own header
-                orphan_packet_header = stream.read((16 + 3*32))
+                # 16 bytes are the headers for the other 2 lanes
+                # Packet headers consist of 4 8-byte words
+                # Each of the 3 lanes have their own header
+                orphan_packet_header = stream.read((16 + 3 * 32))
                 sop_obj = mblb.MblbPacket(orphan_packet_header[16:112])
                 orphan_packet_data = stream.read(sop_obj.packet_size)
                 orphan_packet += buffer + orphan_packet_header + orphan_packet_data
@@ -110,12 +115,21 @@ def read_first_header(stream: RawIOBase):
                 header += buffer
             buffer = stream.read(8)
     if buffer == bytes.fromhex('F07FFF7FFF7FFF7F'):
-        stream.seek(-8,1)
+        stream.seek(-8, 1)
         timestamp, timestamp_from_filename = determine_timestamps(header)
         iq_type, session_id, increment = determine_iq_session_increment(header)
-        return len(header), orphan_packet_list, timestamp, iq_type, session_id, increment, timestamp_from_filename
+        return (
+            len(header),
+            orphan_packet_list,
+            timestamp,
+            iq_type,
+            session_id,
+            increment,
+            timestamp_from_filename
+        )
     else:
         raise RuntimeError("cannot find first message")
+
 
 def read_message_header(stream: RawIOBase):
     '''
@@ -134,4 +148,4 @@ def read_message_header(stream: RawIOBase):
     if buffer == bytes.fromhex('F07FFF7FFF7FFF7F'):
         return unpack_som(buffer, stream)
     else:
-        return 0,0
+        return 0, 0

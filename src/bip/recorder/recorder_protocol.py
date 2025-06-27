@@ -3,13 +3,14 @@ from typing import Protocol, runtime_checkable
 
 import pyarrow as pa
 
+
 @runtime_checkable
 class Recorder(Protocol):
     def __init__(self,
-            filename: Path,
-            schema: pa.Schema,
-            options: dict = {}
-            ):
+                 filename: Path,
+                 schema: pa.Schema,
+                 options: dict = {}
+                 ):
         """
         Records packets.
         """

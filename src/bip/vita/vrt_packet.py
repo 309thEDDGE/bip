@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class VRTPacketHeader:
     def __init__(self, value):
         self.value = int(value)
@@ -33,14 +34,13 @@ class VRTPacketHeader:
 
     @property
     def packet_size(self) -> int:
-        return (self.value  & 0xFFFF)
+        return (self.value & 0xFFFF)
 
 
 class VRTPacket:
     def __init__(self, payload: bytes):
         self.payload = payload
         self.words = np.frombuffer(self.payload, dtype=np.uint32)
-
 
     @property
     def packet_header(self):
@@ -61,5 +61,3 @@ class VRTPacket:
     @property
     def fractional_timestamp(self):
         return self.words[5:7]
-
-

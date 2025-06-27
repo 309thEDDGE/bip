@@ -8,7 +8,7 @@ from . class_identifier import ClassIdentifier
 # not frequency
 
 class SignalDataIndicators:
-    #signal data packets define the indicators as:
+    # signal data packets define the indicators as:
     # trailer included
     # not vita 49.0 packet indicator
     # signal spectrum / signal time data packet
@@ -29,16 +29,13 @@ class SignalDataIndicators:
         return bool(self.value & (1 << 24))
 
 
-
-
-
 class SignalDataPacket(VRTPacket):
     def __init__(self, payload: bytes, **kwargs):
         super().__init__(payload)
-        
+
         # 1 Trailer exists, 0 Trailer does not
         trailer_indicator = self.signal_data_indicators.trailer
-         
+
         if trailer_indicator == 1:
             # Tango has a 2 word vendor while Juliet has a 1 word trailer
             if 'vendor' in kwargs and kwargs.get('vendor') == 'Tango':
@@ -52,28 +49,27 @@ class SignalDataPacket(VRTPacket):
             trailer_size = 0
 
         if 'payload_size' in kwargs:
-            self.sample_count = (kwargs.get('payload_size')) - 7 - int(trailer_size)
+            self.sample_count = (
+                kwargs.get('payload_size')) - 7 - int(trailer_size)
         else:
-            self.sample_count = self.packet_header.packet_size - 7 - int(trailer_size)
+            self.sample_count = self.packet_header.packet_size - \
+                7 - int(trailer_size)
 
         self.data = np.frombuffer(
-                self.payload,
-                offset = 7 *4,
-                count = 2*self.sample_count,
-                dtype = np.int16).reshape((-1, 2))
-
+            self.payload,
+            offset=7 * 4,
+            count=2 * self.sample_count,
+            dtype=np.int16).reshape((-1, 2))
 
     @property
     def signal_data_indicators(self) -> SignalDataIndicators:
         return SignalDataIndicators(self.words[0])
-
 
     # signal data packets vita 49.2 properties
 
     @property
     def stream_id(self) -> int:
         return self.words[1]
-
 
     @property
     def class_id_codes(self) -> ClassIdentifier:

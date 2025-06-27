@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Tuple
 
 import pandas as pd
 import pyarrow as pa
@@ -12,11 +11,11 @@ class PQWriter:
         return "parquet"
 
     def __init__(self,
-            filename: Path,
-            schema: pa.schema,
-            options: dict = {},
-            batch_size: int = 1000
-            ):
+                 filename: Path,
+                 schema: pa.schema,
+                 options: dict = {},
+                 batch_size: int = 1000
+                 ):
 
         self._closed = False
 
@@ -38,8 +37,9 @@ class PQWriter:
         df = pd.DataFrame(self.data)
         table = pa.Table.from_pandas(df)
         try:
-            if self.writer == None:
-                self.writer = pq.ParquetWriter(self._filename, self.schema, **self._options)
+            if self.writer is None:
+                self.writer = pq.ParquetWriter(
+                    self._filename, self.schema, **self._options)
             self.writer.write_table(table)
         except Exception as e:
             print(f"Error writing file: {e}, {self._filename}")
@@ -66,13 +66,12 @@ class PQWriter:
 
     @property
     def metadata(self) -> dict:
-        return  {
-                "output": str(self._filename),
-                "options": self._options,
-                "batch_size": self.batch_size
+        return {
+            "output": str(self._filename),
+            "options": self._options,
+            "batch_size": self.batch_size
         }
 
     def __del__(self):
         if not self._closed:
             self.close()
-

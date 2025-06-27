@@ -1,4 +1,3 @@
-import struct
 from io import (RawIOBase, SEEK_SET)
 from typing import Tuple, Optional
 
@@ -11,6 +10,7 @@ schema = pa.schema([
     ("start_bytes", pa.uint64()),
     ("frame_index", pa.uint32())
 ])
+
 
 def unpack_header(header_bytes: bytes):
     assert len(header_bytes) == 4
@@ -57,8 +57,8 @@ def read_header(stream: RawIOBase) -> Tuple[int, Optional[Tuple[int, int]]]:
     return offset, unpack_header(header_bytes)
 
 
-#i'm going to assume VRLP will come in on an aligned read, the logic is more
-#complex if this isn't true
+# i'm going to assume VRLP will come in on an aligned read, the logic is more
+# complex if this isn't true
 def first_header(stream: RawIOBase):
     b = stream.read(4)
     if len(b) != 4:
@@ -83,4 +83,3 @@ def first_header(stream: RawIOBase):
         raise RuntimeError("incomplete read of first header")
     stream.seek(offset, SEEK_SET)
     return offset
-

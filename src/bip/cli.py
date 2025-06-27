@@ -5,7 +5,6 @@ import sys
 import logging
 
 from pathlib import Path
-from functools import reduce
 
 from bip.__version__ import __version__ as version
 from bip.parse import parse_bin
@@ -14,18 +13,17 @@ from bip.recorder.partitioned_parquet.partitioned_pqwriter import new_partitione
 import bip.plugins
 
 
-
-
 def _find_plugins():
     return {
-            name: importlib.import_module(name)
-            for finder, name, _
-            in pkgutil.iter_modules(bip.plugins.__path__, bip.plugins.__name__ + ".")
+        name: importlib.import_module(name)
+        for finder, name, _
+        in pkgutil.iter_modules(bip.plugins.__path__, bip.plugins.__name__ + ".")
     }
+
 
 def main():
     plugins = _find_plugins()
-    plugin_names = [ s.split(".")[-1] for s in plugins.keys() ]
+    plugin_names = [s.split(".")[-1] for s in plugins.keys()]
     assert 'juliet' in plugin_names
 
     argparser = argparse.ArgumentParser("bip")
@@ -39,7 +37,7 @@ def main():
         required=True,
         default=None,
         help="[OUTPUT_DIRECTORY] directory in which to put output artifacts"
-        )
+    )
     argparser.add_argument(
         "-f", "--force",
         action="store_true",
@@ -47,7 +45,7 @@ def main():
     argparser.add_argument(
         "-p", "--parser",
         required=False,
-        default = "juliet",
+        default="juliet",
         help="parsing engine (select from " + ",".join(plugin_names) + ")",
         choices=plugin_names)
     argparser.add_argument(
@@ -61,7 +59,7 @@ def main():
         default=None,
         required=False,
         help="compression codec",
-        choices = [ "snappy", "gzip", "brotli", "lz4", "zstd" ])
+        choices=["snappy", "gzip", "brotli", "lz4", "zstd"])
     argparser.add_argument(
         "--compression_level",
         default=None,
@@ -70,7 +68,7 @@ def main():
         type=int)
     argparser.add_argument(
         "--clean",
-        action= "store_true",
+        action="store_true",
         required=False,
         help="clean DEADBEEF from data")
     argparser.add_argument(
@@ -88,7 +86,7 @@ def main():
         "--partition-orphan-key",
         help="Partition key to use for data that doesn't belong to a context packet in this file.",
         default="ORPHAN_DATA",
-        required = False
+        required=False
     )
     argparser.add_argument(
         "--log-level",
@@ -96,7 +94,6 @@ def main():
         default="WARNING",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="The level of logging you want in the log file.")
-
 
     args = argparser.parse_args()
     input_file = args.input
@@ -132,25 +129,25 @@ def main():
 
     plugin = plugins[f"bip.plugins.{args.parser}"]
     data_recorder = (
-        new_partitioned_parquet_writer(['data_key']) 
-        if args.partition_data 
+        new_partitioned_parquet_writer(['data_key'])
+        if args.partition_data
         else PQWriter
     )
-    
+
     log_level = getattr(logging, args.log_level.upper())
-    
+
     try:
         parser = plugin.Parser(
-                input_path,
-                output_path,
-                PQWriter,
-                log_level,
-                recorder_opts=recorder_opts,
-                data_recorder=data_recorder,
-                clean = args.clean,
-                orphan_context_key=args.partition_orphan_key,
-                context_key_function=lambda k: f"{args.partition_key_prefix}{k}"
-                )
+            input_path,
+            output_path,
+            PQWriter,
+            log_level,
+            recorder_opts=recorder_opts,
+            data_recorder=data_recorder,
+            clean=args.clean,
+            orphan_context_key=args.partition_orphan_key,
+            context_key_function=lambda k: f"{args.partition_key_prefix}{k}"
+        )
     except Exception as e:
         raise RuntimeError(f"invalid plugin {args.parser}: {str(e)}")
 
@@ -159,4 +156,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

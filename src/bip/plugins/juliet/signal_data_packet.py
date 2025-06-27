@@ -30,23 +30,20 @@ _schema = [
     ("samples_q", pa.list_(pa.int16(), -1))
 ]
 
+
 def _schema_elt(e: tuple) -> dict:
-    if len(e) > 2  and e[2] is not None:
-        unit =  { "unit": str(e[2])  }
+    if len(e) > 2 and e[2] is not None:
+        unit = {"unit": str(e[2])}
     else:
         unit = {}
 
     return {
-            "name": e[0],
-            "type": str(e[1]),
+        "name": e[0],
+        "type": str(e[1]),
     } | unit
 
 
-schema = [ _schema_elt(e) for e in _schema ]
-
-
-
-
+schema = [_schema_elt(e) for e in _schema]
 
 
 class _SignalDataPacket(SignalDataPacket):
@@ -58,31 +55,32 @@ class _SignalDataPacket(SignalDataPacket):
         self.time = bit_manipulation.time(tsi, tsf0, tsf1)
         self.classId0, self.classId1 = self.class_identifier
 
+
 class SignalData:
     def __init__(self,
-            output_path: Path,
-            Recorder: type,
-            recorder_opts: dict = None,
-            batch_size: int = 1000,
-            **kwargs):
+                 output_path: Path,
+                 Recorder: type,
+                 recorder_opts: dict = None,
+                 batch_size: int = 1000,
+                 **kwargs):
         if recorder_opts is None:
             recorder_opts = {}
 
         self.options = kwargs
         self.recorder = Recorder(
-                output_path,
-                schema=pa.schema([(e[0], e[1]) for e in _schema]),
-                options=recorder_opts,
-                batch_size=batch_size)
+            output_path,
+            schema=pa.schema([(e[0], e[1]) for e in _schema]),
+            options=recorder_opts,
+            batch_size=batch_size)
         self.data = 0
         self.packet_id = 0
 
     def add_record(self,
-            packet: _SignalDataPacket,
-            *,
-            frame_index: int,
-            packet_index: int
-            ):
+                   packet: _SignalDataPacket,
+                   *,
+                   frame_index: int,
+                   packet_index: int
+                   ):
         assert isinstance(packet, _SignalDataPacket)
         header = packet.packet_header
 
@@ -105,22 +103,21 @@ class SignalData:
             "trailer": np.uint32(packet.trailer),
             "frame_index": np.uint32(frame_index),
             "packet_index": np.uint32(packet_index),
-            "samples_i": packet.data[:,0],
-            "samples_q": packet.data[:,1]
+            "samples_i": packet.data[:, 0],
+            "samples_q": packet.data[:, 1]
         })
 
     def process(self,
-            payload: bytes,
-            *,
-            frame_index: int,
-            packet_index: int
-            ):
+                payload: bytes,
+                *,
+                frame_index: int,
+                packet_index: int
+                ):
         self.add_record(_SignalDataPacket(payload),
-                frame_index=frame_index,
-                packet_index=packet_index)
+                        frame_index=frame_index,
+                        packet_index=packet_index)
         self.packet_id += 1
 
     @property
     def metadata(self) -> dict:
         return self.recorder.metadata | {"schema": schema}
-
