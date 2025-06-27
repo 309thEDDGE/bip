@@ -1,4 +1,3 @@
-import struct
 from pathlib import Path
 
 import pyarrow as pa
@@ -8,14 +7,14 @@ from bip.vita import ContextPacket
 from bip.common import bit_manipulation
 
 _schema = [
-    ("packet_id", pa.uint32(),None),
+    ("packet_id", pa.uint32(), None),
 
-    ("packet_size", pa.uint16(),None),
-    ("packet_count", pa.uint16(),None),
-    ("tsfd", pa.uint8(),None),
-    ("tsid", pa.uint8(),None),
-    ("indicators", pa.uint8(),None),
-    ("packet_type", pa.uint8(),None),
+    ("packet_size", pa.uint16(), None),
+    ("packet_count", pa.uint16(), None),
+    ("tsfd", pa.uint8(), None),
+    ("tsid", pa.uint8(), None),
+    ("indicators", pa.uint8(), None),
+    ("packet_type", pa.uint8(), None),
 
     ("classid_pad_bit_count", pa.uint8(), None),
     ("classid_oui", pa.uint32(), None),
@@ -97,18 +96,20 @@ _schema = [
 
     ("system_time", pa.float64(), "nsec"),
 
-    ("frame_index", pa.uint32(),None),
-    ("packet_index", pa.uint32(),None),
+    ("frame_index", pa.uint32(), None),
+    ("packet_index", pa.uint32(), None),
 ]
+
 
 def _schema_elt(e: tuple) -> dict:
     return {
-            "name": e[0],
-            "type": str(e[1]),
-            "unit": str(e[2]) if e[2] is not None else None
+        "name": e[0],
+        "type": str(e[1]),
+        "unit": str(e[2]) if e[2] is not None else None
     }
 
-schema = [ _schema_elt(e) for e in _schema ]
+
+schema = [_schema_elt(e) for e in _schema]
 
 
 class _HeartbeatContextPacket(ContextPacket):
@@ -190,34 +191,34 @@ class _HeartbeatContextPacket(ContextPacket):
         self.rx_stream_id_14 = int(self.words[69])
         self.rx_stream_id_15 = int(self.words[70])
 
-        self.system_time = float(self.words[71:73].view(dtype = np.float64))
+        self.system_time = float(self.words[71:73].view(dtype=np.float64))
 
 
 class HeartbeatContext:
     def __init__(self,
-            output_path: Path,
-            Recorder: type,
-            recorder_opts: dict = None,
-            batch_size: int = 1000,
-            **kwargs):
+                 output_path: Path,
+                 Recorder: type,
+                 recorder_opts: dict = None,
+                 batch_size: int = 1000,
+                 **kwargs):
 
         if recorder_opts is None:
             recorder_opts = {}
 
         self.recorder = Recorder(
-                output_path,
-                schema=pa.schema([(e[0], e[1]) for e in _schema]),
-                options=recorder_opts,
-                batch_size=batch_size)
+            output_path,
+            schema=pa.schema([(e[0], e[1]) for e in _schema]),
+            options=recorder_opts,
+            batch_size=batch_size)
 
         self.packet_id = 0
 
     def add_record(self,
-            packet: _HeartbeatContextPacket,
-            *,
-            frame_index: int,
-            packet_index: int
-            ):
+                   packet: _HeartbeatContextPacket,
+                   *,
+                   frame_index: int,
+                   packet_index: int
+                   ):
         assert isinstance(packet, _HeartbeatContextPacket)
         header = packet.packet_header
 
@@ -316,16 +317,15 @@ class HeartbeatContext:
         })
 
     def process(self, payload: bytes,
-            *,
-            frame_index: int,
-            packet_index: int):
+                *,
+                frame_index: int,
+                packet_index: int):
 
         self.add_record(_HeartbeatContextPacket(payload),
-                frame_index=frame_index,
-                packet_index=packet_index)
+                        frame_index=frame_index,
+                        packet_index=packet_index)
         self.packet_id += 1
 
     @property
-    def metadata(self)->dict :
+    def metadata(self) -> dict:
         return self.recorder.metadata | {"schema": schema}
-

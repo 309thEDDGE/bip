@@ -11,7 +11,7 @@ from typing import Optional
 _schema = [
     ("packet_id", pa.uint32()),
 
-    #header
+    # header
     ("packet_size", pa.uint16()),
     ("packet_count", pa.uint16()),
     ("tsfd", pa.uint8()),
@@ -37,21 +37,23 @@ _schema = [
     ("packet_index", pa.uint32()),
 ]
 
+
 def _schema_elt(e: tuple) -> dict:
-   if len(e) > 2  and e[2] is not None:
-       unit =  { "unit": str(e[2])  }
-   else:
-       unit = {}
+    if len(e) > 2 and e[2] is not None:
+        unit = {"unit": str(e[2])}
+    else:
+        unit = {}
 
-   return {
-           "name": e[0],
-           "type": str(e[1]),
-   } | unit
-
-schema = [ _schema_elt(e) for e in _schema ]
+    return {
+        "name": e[0],
+        "type": str(e[1]),
+    } | unit
 
 
-#TODO: cancellation and acknowledgement flags aren't handled or stored
+schema = [_schema_elt(e) for e in _schema]
+
+
+# TODO: cancellation and acknowledgement flags aren't handled or stored
 class _ExtensionCommandPacket(VitaExtensionCommandPacket):
     def __init__(self, payload: bytes):
         super().__init__(payload)
@@ -72,32 +74,31 @@ class _ExtensionCommandPacket(VitaExtensionCommandPacket):
 
 class AckR_Packet:
     def __init__(self,
-            output_path: Path,
-            Recorder: type,
-            recorder_opts: Optional[dict] = None,
-            batch_size: int = 1000,
-            **kwargs):
+                 output_path: Path,
+                 Recorder: type,
+                 recorder_opts: Optional[dict] = None,
+                 batch_size: int = 1000,
+                 **kwargs):
         if recorder_opts is None:
             recorder_opts = {}
 
         self.options = kwargs
         self.recorder = Recorder(
-                output_path,
-                schema=pa.schema([(e[0], e[1]) for e in _schema]),
-                options=recorder_opts,
-                batch_size=batch_size)
+            output_path,
+            schema=pa.schema([(e[0], e[1]) for e in _schema]),
+            options=recorder_opts,
+            batch_size=batch_size)
 
         self.packet_id = 0
 
     def __add_record(self,
-            packet: _ExtensionCommandPacket,
-            *,
-            frame_index: int,
-            packet_index: int
-            ):
+                     packet: _ExtensionCommandPacket,
+                     *,
+                     frame_index: int,
+                     packet_index: int
+                     ):
         assert isinstance(packet, _ExtensionCommandPacket)
         header = packet.packet_header
-
 
         self.recorder.add_record({
             "packet_id": np.uint32(self.packet_id),
@@ -127,15 +128,14 @@ class AckR_Packet:
         })
 
     def process(self, payload: bytes,
-            *,
-            frame_index: int,
-            packet_index: int):
+                *,
+                frame_index: int,
+                packet_index: int):
         self.__add_record(_ExtensionCommandPacket(payload),
-                frame_index=frame_index,
-                packet_index=packet_index)
+                          frame_index=frame_index,
+                          packet_index=packet_index)
         self.packet_id += 1
 
     @property
-    def metadata(self)->dict :
+    def metadata(self) -> dict:
         return self.recorder.metadata | {"schema": schema}
-

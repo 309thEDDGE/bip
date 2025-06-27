@@ -1,4 +1,3 @@
-import struct
 from pathlib import Path
 
 import pyarrow as pa
@@ -38,22 +37,23 @@ _schema = [
     ("packet_index", pa.uint32()),
 ]
 
+
 def _schema_elt(e: tuple) -> dict:
-    if len(e) > 2  and e[2] is not None:
-        unit =  { "unit": str(e[2])  }
+    if len(e) > 2 and e[2] is not None:
+        unit = {"unit": str(e[2])}
     else:
         unit = {}
 
     return {
-            "name": e[0],
-            "type": str(e[1]),
+        "name": e[0],
+        "type": str(e[1]),
     } | unit
 
 
-schema = [ _schema_elt(e) for e in _schema ]
+schema = [_schema_elt(e) for e in _schema]
 
 
-#TODO: cancellation and acknowledgement flags aren't handled or stored
+# TODO: cancellation and acknowledgement flags aren't handled or stored
 class _ExtensionCommandPacket(VitaExtensionCommandPacket):
     def __init__(self, payload: bytes):
         super().__init__(payload)
@@ -64,36 +64,38 @@ class _ExtensionCommandPacket(VitaExtensionCommandPacket):
         self.classId0, self.classId1 = self.class_identifier
         self.freq = bit_manipulation.frequency(self.words[16], self.words[17])
         self.offset = bit_manipulation.offset(self.words[18], self.words[19])
-        self.sampling_rate = bit_manipulation.sample_rate(self.words[21],self.words[22])
+        self.sampling_rate = bit_manipulation.sample_rate(
+            self.words[21], self.words[22])
         self.az, self.el = bit_manipulation.pointing_vector(self.words[25])
         self.cited_sid = self.words[26]
-        self.dwell = bit_manipulation.dwell(self.words[28],self.words[29])
+        self.dwell = bit_manipulation.dwell(self.words[28], self.words[29])
+
 
 class ExtensionCommand:
     def __init__(self,
-            output_path: Path,
-            Recorder: type,
-            recorder_opts: Optional[dict] = None,
-            batch_size: int = 1000,
-            **kwargs):
+                 output_path: Path,
+                 Recorder: type,
+                 recorder_opts: Optional[dict] = None,
+                 batch_size: int = 1000,
+                 **kwargs):
         if recorder_opts is None:
             recorder_opts = {}
 
         self.options = kwargs
         self.recorder = Recorder(
-                output_path,
-                schema=pa.schema([(e[0], e[1]) for e in _schema]),
-                options=recorder_opts,
-                batch_size=batch_size)
+            output_path,
+            schema=pa.schema([(e[0], e[1]) for e in _schema]),
+            options=recorder_opts,
+            batch_size=batch_size)
 
         self.packet_id = 0
 
     def add_record(self,
-            packet: _ExtensionCommandPacket,
-            *,
-            frame_index: int,
-            packet_index: int
-            ):
+                   packet: _ExtensionCommandPacket,
+                   *,
+                   frame_index: int,
+                   packet_index: int
+                   ):
         assert isinstance(packet, _ExtensionCommandPacket)
         header = packet.packet_header
 
@@ -113,7 +115,7 @@ class ExtensionCommand:
 
             "stream_id": np.uint32(packet.stream_id),
             "classId0": np.uint32(packet.classId0),
-            "classId1":np.uint32(packet.classId1),
+            "classId1": np.uint32(packet.classId1),
             "cited_sid": np.uint32(packet.cited_sid),
             "freq": np.float64(packet.freq),
             "offset": np.float64(packet.offset),
@@ -127,15 +129,14 @@ class ExtensionCommand:
         })
 
     def process(self, payload: bytes,
-            *,
-            frame_index: int,
-            packet_index: int):
+                *,
+                frame_index: int,
+                packet_index: int):
         self.add_record(_ExtensionCommandPacket(payload),
-                frame_index=frame_index,
-                packet_index=packet_index)
+                        frame_index=frame_index,
+                        packet_index=packet_index)
         self.packet_id += 1
 
     @property
-    def metadata(self)->dict :
+    def metadata(self) -> dict:
         return self.recorder.metadata | {"schema": schema}
-

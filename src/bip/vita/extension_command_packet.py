@@ -8,5 +8,3 @@ class ExtensionCommandPacket(VRTPacket):
     @property
     def stream_id(self) -> int:
         return self.words[1]
-
-

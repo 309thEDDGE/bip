@@ -6,14 +6,15 @@ import tqdm
 
 from bip.recorder.recorder_protocol import Recorder
 
+
 @runtime_checkable
 class Parser(Protocol):
     def __init__(self,
-            input_path: Path,
-            output_path: Path,
-            recorder: Recorder,
-            recorder_opts: dict = None
-            ):
+                 input_path: Path,
+                 output_path: Path,
+                 recorder: Recorder,
+                 recorder_opts: dict = None
+                 ):
         """
         Defines the protocol for the protocol constructor.
         """
@@ -45,4 +46,3 @@ class Parser(Protocol):
         How many packets have been read by this parser from the stream.
         """
         pass
-

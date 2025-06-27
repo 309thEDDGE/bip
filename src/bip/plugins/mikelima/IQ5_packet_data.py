@@ -3,7 +3,6 @@ from bip.non_vita import mblb
 
 import pyarrow as pa
 import numpy as np
-import os
 
 BEAMS = 3
 LANES = 3
@@ -55,49 +54,51 @@ _IQ5_packet_schema = [
     ("samples_q_center", pa.list_(pa.int16(), -1))
 ]
 
+
 def _schema_elt(e: tuple) -> dict:
-   if len(e) > 2  and e[2] is not None:
-       unit =  { "unit": str(e[2])  }
-   else:
-       unit = {}
+    if len(e) > 2 and e[2] is not None:
+        unit = {"unit": str(e[2])}
+    else:
+        unit = {}
 
-   return {
-           "name": e[0],
-           "type": str(e[1]),
-   } | unit
+    return {
+        "name": e[0],
+        "type": str(e[1]),
+    } | unit
 
-IQ5_schema = [ _schema_elt(e) for e in _IQ5_packet_schema ]
+
+IQ5_schema = [_schema_elt(e) for e in _IQ5_packet_schema]
+
 
 class ProcessIq5Packet():
     def __init__(self,
-            output_path: Path,
-            Recorder: type,
-            recorder_opts: dict = None,
-            batch_size: int = 10,
-            **kwargs):
+                 output_path: Path,
+                 Recorder: type,
+                 recorder_opts: dict = None,
+                 batch_size: int = 10,
+                 **kwargs):
         if recorder_opts is None:
             recorder_opts = {}
 
         self.options = kwargs
 
         self.packet_recorder = Recorder(
-                output_path,
-                schema=pa.schema([(e[0], e[1]) for e in _IQ5_packet_schema]),
-                options=recorder_opts,
-                batch_size=batch_size)
+            output_path,
+            schema=pa.schema([(e[0], e[1]) for e in _IQ5_packet_schema]),
+            options=recorder_opts,
+            batch_size=batch_size)
 
         self.packet_id = 0
         self.data = 0
         self.message_key = ''
         self.time = 0
 
-
     def __add_record(self,
-            packet: mblb.MblbPacket,
-            left_data,
-            right_data,
-            center_data
-            ):
+                     packet: mblb.MblbPacket,
+                     left_data,
+                     right_data,
+                     center_data
+                     ):
         '''
         Add a row to the packet_content parquet
         '''
@@ -140,24 +141,27 @@ class ProcessIq5Packet():
             "AFS_mode": np.float32(self.afs_mode),
             "SchedNum": np.float32(self.sched_num),
             "SIinSchedNum": np.float32(self.si_in_sched_num),
-            "time": np.float64(self.time / 1000000), #us to s
-            "samples_i_left": left_data[:,0],
-            "samples_q_left": left_data[:,1],
-            "samples_i_right": right_data[:,0],
-            "samples_q_right": right_data[:,1],
-            "samples_i_center": center_data[:,0],
-            "samples_q_center": center_data[:,1]
+            "time": np.float64(self.time / 1000000),  # us to s
+            "samples_i_left": left_data[:, 0],
+            "samples_q_left": left_data[:, 1],
+            "samples_i_right": right_data[:, 0],
+            "samples_q_right": right_data[:, 1],
+            "samples_i_center": center_data[:, 0],
+            "samples_q_center": center_data[:, 1]
         })
 
     @property
-    def metadata(self) -> dict :
+    def metadata(self) -> dict:
         return self.packet_recorder.metadata | {"schema": IQ5_schema}
 
-    def process_orphan_packet(self, packet: bytearray, sop_obj, iq_type: int, session_id: int, increment: int, timestamp_from_filename: int):
+    def process_orphan_packet(self, packet: bytearray, sop_obj, iq_type: int,
+                              session_id: int, increment: int, timestamp_from_filename: int):
         data = np.frombuffer(packet,
-                            offset=np.uint64(LANES*(MARKER_BYTES+HEADER_BYTES)),
-                            count=np.uint64((len(packet) - (LANES*(MARKER_BYTES+HEADER_BYTES)))/2),
-                            dtype = np.int16).reshape((-1, 2))
+                             offset=np.uint64(
+                                 LANES * (MARKER_BYTES + HEADER_BYTES)),
+                             count=np.uint64(
+                                 (len(packet) - (LANES * (MARKER_BYTES + HEADER_BYTES))) / 2),
+                             dtype=np.int16).reshape((-1, 2))
         self.time = np.nan
         self.left_data = data[::3]
         self.right_data = data[1::3]
@@ -166,13 +170,18 @@ class ProcessIq5Packet():
         self.session_id = session_id
         self.increment = increment - 1
         self.timestamp_from_filename = timestamp_from_filename
-        self.sample_rate = 1280/(2**sop_obj.rx_config)
+        self.sample_rate = 1280 / (2**sop_obj.rx_config)
         self.afs_mode = np.nan
         self.sched_num = np.nan
         self.si_in_sched_num = np.nan
-        self.__add_record(sop_obj, self.left_data, self.right_data, self.center_data)
+        self.__add_record(
+            sop_obj,
+            self.left_data,
+            self.right_data,
+            self.center_data)
 
-    def process_packet(self, stream: bytearray, packet, som_obj, packet_list_index):
+    def process_packet(self, stream: bytearray, packet,
+                       som_obj, packet_list_index):
         '''
         the packet is passed in, now we stream the data (I/Q) into a
         1 dimensional array of 2 values per element (I/Q)
@@ -182,16 +191,19 @@ class ProcessIq5Packet():
         we know that bytearray starts at SOP and ends
         right before the next SOP or EOM
         '''
-        self.sample_rate = 1280/(2**packet.rx_config)
-        data_word_count = np.uint64(2*som_obj.dwell*BEAMS*self.sample_rate)
+        self.sample_rate = 1280 / (2**packet.rx_config)
+        data_word_count = np.uint64(
+            2 * som_obj.dwell * BEAMS * self.sample_rate)
         data = np.frombuffer(stream,
-                            offset=np.uint64(LANES*(MARKER_BYTES+HEADER_BYTES)),
-                            count=data_word_count,
-                            dtype = np.int16).reshape((-1, 2))
+                             offset=np.uint64(
+                                 LANES * (MARKER_BYTES + HEADER_BYTES)),
+                             count=data_word_count,
+                             dtype=np.int16).reshape((-1, 2))
         self.left_data = data[::3]
         self.right_data = data[1::3]
         self.center_data = data[2::3]
-        self.time = som_obj.time_since_epoch_us + (packet_list_index * som_obj.dwell)
+        self.time = som_obj.time_since_epoch_us + \
+            (packet_list_index * som_obj.dwell)
         self.iq_type = som_obj.iq_type
         self.session_id = som_obj.session_id
         self.increment = som_obj.increment
@@ -200,4 +212,8 @@ class ProcessIq5Packet():
         self.sched_num = som_obj.sched_num
         self.si_in_sched_num = som_obj.si_in_sched_num
 
-        self.__add_record(packet, self.left_data, self.right_data, self.center_data)
+        self.__add_record(
+            packet,
+            self.left_data,
+            self.right_data,
+            self.center_data)

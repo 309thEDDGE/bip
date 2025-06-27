@@ -30,5 +30,3 @@ class ContextPacket(VRTPacket):
     @property
     def class_id(self) -> ClassIdentifier:
         return ClassIdentifier(self.words[2:4])
-
-

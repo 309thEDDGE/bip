@@ -2,6 +2,7 @@ import struct
 import random
 import uuid
 
+
 def create_random_metadata():
     metadata = {}
     metadata.update({'A': '0'})
@@ -14,12 +15,13 @@ def create_random_metadata():
     metadata.update({'H': '0'})
     metadata.update({'I': '0'})
     metadata.update({'J': '0'})
-    metadata.update({'K':[]})
+    metadata.update({'K': []})
     metadata.update({'L': []})
     metadata.update({'M': []})
     metadata.update({'N': []})
 
     return metadata
+
 
 def add_packet_header(bin_file):
     bin_file.write('P'.encode('utf-8'))
@@ -27,8 +29,9 @@ def add_packet_header(bin_file):
     bin_file.write('L'.encode('utf-8'))
     bin_file.write('V'.encode('utf-8'))
 
-    frame_header = random.randint(20,40) << 20
-    bin_file.write(struct.pack('<I',frame_header))
+    frame_header = random.randint(20, 40) << 20
+    bin_file.write(struct.pack('<I', frame_header))
+
 
 def add_packet_trailer(bin_file):
     bin_file.write('D'.encode('utf-8'))
@@ -36,30 +39,32 @@ def add_packet_trailer(bin_file):
     bin_file.write('E'.encode('utf-8'))
     bin_file.write('V'.encode('utf-8'))
 
+
 def add_random_data_packet(bin_file):
     add_packet_header(bin_file)
     packet_size = 65535
     packet_id = random.randint(7000, 8000)
-    bin_file.write(struct.pack('H',packet_size))
-    bin_file.write(struct.pack('H',packet_id))
-    stream_id = random.randint(11,21)
-    bin_file.write(struct.pack('<I',stream_id))
+    bin_file.write(struct.pack('H', packet_size))
+    bin_file.write(struct.pack('H', packet_id))
+    stream_id = random.randint(11, 21)
+    bin_file.write(struct.pack('<I', stream_id))
     class_id_0 = 0x00AAAAAA
-    bin_file.write(struct.pack('<I',class_id_0))
+    bin_file.write(struct.pack('<I', class_id_0))
     class_id_1 = 0X04000D00
-    bin_file.write(struct.pack('<I',class_id_1))
+    bin_file.write(struct.pack('<I', class_id_1))
     tsi = random.randint(1690000000, 1700000000)
-    bin_file.write(struct.pack('<I',tsi))
+    bin_file.write(struct.pack('<I', tsi))
     tsf = random.randint(0, 18000000000000000000)
-    bin_file.write(struct.pack('<Q',tsf))
+    bin_file.write(struct.pack('<Q', tsf))
 
-    for k in range(65534):
-        I = random.randint(-40, 40)
-        Q = random.randint(-40,40)
-        bin_file.write(struct.pack('<h', I))
-        bin_file.write(struct.pack('<h', Q))
-    
+    for _ in range(65534):
+        sample_i = random.randint(-40, 40)
+        sample_q = random.randint(-40, 40)
+        bin_file.write(struct.pack('<h', sample_i))
+        bin_file.write(struct.pack('<h', sample_q))
+
     add_packet_trailer(bin_file)
+
 
 def add_random_context_packet(bin_file):
     add_packet_header(bin_file)
@@ -71,7 +76,7 @@ def add_random_context_packet(bin_file):
     26      isAck           0       This is not an Acknowledge packet
     25      reserved        0
     24      isCancellation  0       This is not a Calcellation packet
-    23:22   tsi             11      Integer Timestamp definition 
+    23:22   tsi             11      Integer Timestamp definition
                                     00: Not included
                                     01: UTC time
                                     10 GPS time
@@ -85,12 +90,12 @@ def add_random_context_packet(bin_file):
     15:0    packet_size     32      The size of this packet. 32 words
     '''
     header = 0b01111000111000010000000000100000
-    bin_file.write(struct.pack('<I',header))
+    bin_file.write(struct.pack('<I', header))
     '''
     Stream_ID will be provided by VAA upon allocation.
     '''
-    stream_id = random.randint(11,21)
-    bin_file.write(struct.pack('<I',stream_id))
+    stream_id = random.randint(11, 21)
+    bin_file.write(struct.pack('<I', stream_id))
     '''
     Class ID Definition:
     31:27   padbitcount             0   Number of padding bits added at the end of the packet
@@ -120,13 +125,13 @@ def add_random_context_packet(bin_file):
     7:0     packet_class_code_version 0-255 The version of the Packet Class Code in case the definitions change
     '''
     class_id_0 = 0x00AAAAAA
-    bin_file.write(struct.pack('<I',class_id_0))
+    bin_file.write(struct.pack('<I', class_id_0))
     class_id_1 = 0x04000A00
-    bin_file.write(struct.pack('<I',class_id_1))
+    bin_file.write(struct.pack('<I', class_id_1))
     tsi = random.randint(1690000000, 1700000000)
-    bin_file.write(struct.pack('<I',tsi))
+    bin_file.write(struct.pack('<I', tsi))
     tsf = random.randint(0, 18000000000000000000)
-    bin_file.write(struct.pack('<Q',tsf))
+    bin_file.write(struct.pack('<Q', tsf))
 
     '''
     Control Ack Mode Field Definition:
@@ -136,18 +141,19 @@ def add_random_context_packet(bin_file):
     28      ir          0   Controller ID format is not included in this packet
     27      p           0   Partial packet execustion Permission
                             0: Any uncorrected errors and warnings will cause the whole packet to be rejected
-                            1: Any parameter without error will be executed and and errored parameter will execute if corrected
+                            1: Any parameter without error will be executed and and errored parameter will execute
+                               if corrected
     26      w           0   What happens when a warning occcurs
                             0: no action (Base Set has no warnings at all, only errors)
                             1: MFA will try to correct the parameter
     25      er          0   What happends when an error occurs
                             0: no action
                             1: MFA will try to correct the parameter
-    24:23   actionbits  10  What will this packet do 
+    24:23   actionbits  10  What will this packet do
                             00: no action
                             01: dry run
                             10: execute
-                            11: undefined   
+                            11: undefined
     22      nack        0   Do not Provide negative acknowledgements when warnings/errors occur. 1: would do that
     21      reserved    0
     20      reqv        0   Validation Ack Packet not requested
@@ -156,12 +162,15 @@ def add_random_context_packet(bin_file):
     17      reqw        0   Do not include Warning Fields in Execution and Validation packets
     16      reqEr       1   Do include Error Fields in Execution Packets
     15      reqR        1   Info-Response packet is requested
-    14:12   timingcontrol   000 Timing control is at Controllee's discretion, default is when Control Fields are executed
+    14:12   timingcontrol   000 Timing control is at Controllee's discretion, default is when Control Fields are
+                                executed
     11:8    ackbits     0   Acknowledge bits
     7:4     Schreqtype  1   Schedule Request Type
-                            0: None. Message is for information only. Timestamp is time after which the scheduler can expect to receive schedule requests
+                            0: None. Message is for information only. Timestamp is time after which the scheduler can
+                               expect to receive schedule requests
                             1: Requesting execute starting at Timestamp for Dwell seconds
-                            2: Requesting execute start between Timestamp + Early_Start and Timestamp + Late_Start for Dwell seconds
+                            2: Requesting execute start between Timestamp + Early_Start and Timestamp + Late_Start
+                               for Dwell seconds
                             3: Requesting execute when possible starting now for Dwell seconds
                             4-14: undefined
                             15: Cancel
@@ -169,14 +178,14 @@ def add_random_context_packet(bin_file):
     2:0     reserved    0
     '''
     control_ack_mode_field = 0b00000001000010011000000000010000
-    bin_file.write(struct.pack('<I',control_ack_mode_field))
+    bin_file.write(struct.pack('<I', control_ack_mode_field))
     '''
     Message ID
-    This is used to distinguish Context Packets with the same Stream ID and Class ID values. 
+    This is used to distinguish Context Packets with the same Stream ID and Class ID values.
     This value increments starting at 1
     '''
-    message_id =1
-    bin_file.write(struct.pack('<I',message_id))
+    message_id = 1
+    bin_file.write(struct.pack('<I', message_id))
     '''
     CIF0 Definition
     31  cfci        1   Context Field change indicator
@@ -214,7 +223,7 @@ def add_random_context_packet(bin_file):
     0   reserved    0
     '''
     cif0 = 0b10101000101000001000000000011110
-    bin_file.write(struct.pack('<I',cif0))
+    bin_file.write(struct.pack('<I', cif0))
     '''
     CIF1 Definition
     31  phaseoffset         0   Phase Offset is not included in this packet
@@ -249,15 +258,15 @@ def add_random_context_packet(bin_file):
     0   reserved            0
     '''
     cif1 = 0b01100010000000000000000000000000
-    bin_file.write(struct.pack('<I',cif1))
+    bin_file.write(struct.pack('<I', cif1))
     '''
     CIF2 Definition:
     31:7 All 0s not in my notebook
     6   funcpriorityID  1   Function Priority ID is included in the packet
-    5:0 All 0s not in my notebook   
+    5:0 All 0s not in my notebook
     '''
     cif2 = 0b00000000000000000000000001000000
-    bin_file.write(struct.pack('<I',cif2))
+    bin_file.write(struct.pack('<I', cif2))
     '''
     CIF3 Definition
     31:22 All 0s not in my notebook
@@ -265,7 +274,7 @@ def add_random_context_packet(bin_file):
     20:0    All 0s not in my notebook
     '''
     cif3 = 0b00000000001000000000000000000000
-    bin_file.write(struct.pack('<I',cif3))
+    bin_file.write(struct.pack('<I', cif3))
     '''
     CIF4 Definition
     31:30   reserved    0
@@ -282,12 +291,12 @@ def add_random_context_packet(bin_file):
     20:0    reserved        0
     '''
     cif4 = 0b00100001001000000000000000000000
-    bin_file.write(struct.pack('<I',cif4))
+    bin_file.write(struct.pack('<I', cif4))
 
     bandwidth = random.uniform(0.00, 8.79)
-    bin_file.write(struct.pack('<d',bandwidth))
-    RF_freq = random.uniform(0,55)
-    bin_file.write(struct.pack('<d',RF_freq))
+    bin_file.write(struct.pack('<d', bandwidth))
+    rf_freq = random.uniform(0, 55)
+    bin_file.write(struct.pack('<d', rf_freq))
     '''
     Note about Gain
     Gain 31:16 are set to 0 in Base Set
@@ -295,22 +304,23 @@ def add_random_context_packet(bin_file):
     Gain 15:0 Will be set to 0 in Tx Schedule Requests
     '''
     gain1 = 0
-    bin_file.write(struct.pack('<h',gain1))
-    gain2 = random.randint(-256,256)
-    bin_file.write(struct.pack('<h',gain2))
+    bin_file.write(struct.pack('<h', gain1))
+    gain2 = random.randint(-256, 256)
+    bin_file.write(struct.pack('<h', gain2))
     '''
     Sample Rate is measured in Hz'''
     sample_rate = 80
-    bin_file.write(struct.pack('<Q',sample_rate))
+    bin_file.write(struct.pack('<Q', sample_rate))
 
     data_format = 900
-    bin_file.write(struct.pack('<Q',data_format))
+    bin_file.write(struct.pack('<Q', data_format))
     '''
     Notes on Polarization
     Polarization 31:16 are ellipse tilt angle
     Polarization 15:0 are ellipse eccentricity both measured in radians
 
-    Tilt Angle: angle of the polarization ellipse major axis counter clockwise from the antenna plane's positive x-axis
+    Tilt Angle: angle of the polarization ellipse major axis counter clockwise from the antenna plane's positive
+                x-axis
 
     Ellipticity: eccentricity of polarization ellipse including rotation direction
     Ellipticity=0: Right-handed circular polarization
@@ -321,12 +331,13 @@ def add_random_context_packet(bin_file):
 
     Left/Right Handedness are defined from the POV of an observer at the receiver looking towards the transmitter
 
-    The direction in which tilt angle is measured and the definitions of left/right handed rotation are not consistent with IEEE standard 145-1993 and that makes me sad
+    The direction in which tilt angle is measured and the definitions of left/right handed rotation are not
+    consistent with IEEE standard 145-1993 and that makes me sad
     '''
     polarization_tilt_angle = random.choice([0, 12868])
-    bin_file.write(struct.pack('<h',polarization_tilt_angle))
+    bin_file.write(struct.pack('<h', polarization_tilt_angle))
     polarization_ellpticity = random.choice([0, 12868, 6434])
-    bin_file.write(struct.pack('<h',polarization_ellpticity))
+    bin_file.write(struct.pack('<h', polarization_ellpticity))
     '''
     Notes on the 3d-Pointing Vector
     31:16 are Elevation
@@ -341,29 +352,32 @@ def add_random_context_packet(bin_file):
     Azimuth is measured in x-z between projection of pointing vector onto x-z and boresight
     Positive Azimuth is clockwise from boresight looking down
     '''
-    pointing_elevation = random.randint(-90,90)
-    bin_file.write(struct.pack('<h',pointing_elevation))
+    pointing_elevation = random.randint(-90, 90)
+    bin_file.write(struct.pack('<h', pointing_elevation))
     pointing_azimuth = random.randint(0, 511)
-    bin_file.write(struct.pack('<H',pointing_azimuth))
+    bin_file.write(struct.pack('<H', pointing_azimuth))
 
     '''
-    Beam Width refers to the exact value in Base Set, but other interpretations are acknowledged for possible extensions
+    Beam Width refers to the exact value in Base Set, but other interpretations are acknowledged for possible
+    extensions
+
     Beam Width could refer to the maximum allowable Beam Width
     Beam Width could refer to the minimum allowable Beam Width
 
-    This is only point in the base set that different interpretations of a field are noted, so I am noting it down here
+    This is only point in the base set that different interpretations of a field are noted, so I am noting it
+    down here
     '''
-    beam_width_vert = random.randint(0,360)
-    bin_file.write(struct.pack('<H',beam_width_vert))
-    beam_width_horiz = random.randint(0,360)
-    bin_file.write(struct.pack('<H',beam_width_horiz))
+    beam_width_vert = random.randint(0, 360)
+    bin_file.write(struct.pack('<H', beam_width_vert))
+    beam_width_horiz = random.randint(0, 360)
+    bin_file.write(struct.pack('<H', beam_width_horiz))
 
     '''
     Function Priority ID is used to resolve conflicting requests to use the MFA
     This is the spot in line that this context packet wants to be in
     '''
-    function_priority_id = random.randint(0,67108864)
-    bin_file.write(struct.pack('<I',function_priority_id))
+    function_priority_id = random.randint(0, 67108864)
+    bin_file.write(struct.pack('<I', function_priority_id))
 
     '''
     Dwell Duration is measured in femtoseconds
@@ -371,7 +385,7 @@ def add_random_context_packet(bin_file):
     Dwells can be between 0-9223 seconds (2 hours 33 minutes 43 seconds)
     '''
     dwell_duration = 4000000000000000
-    bin_file.write(struct.pack('<Q',dwell_duration))
+    bin_file.write(struct.pack('<Q', dwell_duration))
 
     '''
     Effective Isotropic Radiated Power (EIRP) is the hypothetical power that
@@ -379,15 +393,15 @@ def add_random_context_packet(bin_file):
     as the actual souce antenna in the direction of the antenna's strongest beam
     EIRP is expressed in dBm decibel-milliwatts
     '''
-    EIRP = random.randint(0,10)
-    bin_file.write(struct.pack('<I',EIRP))
+    EIRP = random.randint(0, 10)
+    bin_file.write(struct.pack('<I', EIRP))
 
     '''
     Address Group Index is a look-up index that points to a collection of MFP addresses
     for data and Ack packets for this request
     '''
-    address_group_index = random.randint(0,2147483647)
-    bin_file.write(struct.pack('<I',address_group_index))
+    address_group_index = random.randint(0, 2147483647)
+    bin_file.write(struct.pack('<I', address_group_index))
 
     '''
     Tx Digital Input Power
@@ -395,24 +409,26 @@ def add_random_context_packet(bin_file):
     15:0 contain nominal power level of digital Tx signal input to MFA
     '''
     digital_input_power_0 = 0
-    bin_file.write(struct.pack('<H',digital_input_power_0))
-    digital_input_power_1 = random.randint(0, 65535 )
-    bin_file.write(struct.pack('<H',digital_input_power_1))
-   
+    bin_file.write(struct.pack('<H', digital_input_power_0))
+    digital_input_power_1 = random.randint(0, 65535)
+    bin_file.write(struct.pack('<H', digital_input_power_1))
+
     add_packet_trailer(bin_file)
+
 
 def main():
     file_uuid = uuid.uuid4()
     file_name = f"MOCK_BASE_SET_DATA_{file_uuid}.bin"
-    
-    productRxmetadata = create_random_metadata()
+
+    create_random_metadata()
 
     with open(file_name, 'wb') as bin_file:
-        for i in range(10):
-            startTime, streamID, receiveEvent =add_random_context_packet(bin_file)
+        for _ in range(10):
+            add_random_context_packet(bin_file)
 
-            for j in range(400):
+            for _ in range(400):
                 add_random_data_packet(bin_file)
+
 
 if __name__ == "__main__":
     main()
