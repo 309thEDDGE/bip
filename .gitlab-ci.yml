@@ -1,6 +1,6 @@
 include:
   - project: saber/devsecops-pipelines
-    file: .python_docker-ci.yml
+    file: .python-ci.yml
     inputs:
       source_path: "src"
       pyproject_path: "."

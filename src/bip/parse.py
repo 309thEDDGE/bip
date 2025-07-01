@@ -79,9 +79,9 @@ def parse_bin_stream(
     if verbose:
         parse_rate = parser.packets_read / (toc - tic)
         print(
-            f"parsed: {
-                parser.packets_read} packets, [{
-                parse_rate:.1f} packets/second]")
+            f"parsed: {parser.packets_read} packets, "
+            f"[{parse_rate:.1f} packets/second]"
+        )
 
     _save_metadata(
         output_dir / metadata_filename,

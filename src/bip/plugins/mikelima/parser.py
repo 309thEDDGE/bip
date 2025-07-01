@@ -86,8 +86,9 @@ class Parser:
         return self._packets_read
 
     def initialize_message_processor(self, iq_type: int):
-        message_data_filename = f"{MESSAGE_FILENAME}.{
-            self._recorder.extension()}"
+        message_data_filename = (
+            f"{MESSAGE_FILENAME}.{self._recorder.extension()}"
+        )
 
         self.message_processor = ProcessMessage(
             self._output_path,

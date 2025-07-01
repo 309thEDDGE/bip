@@ -94,8 +94,9 @@ class Parser:
             "filename": bad_packets_filename,
         } | self.bad_packets_recorder.metadata
 
-        unknown_packets_filename = f"{UNKNOWN_DATA_FILENAME}.{
-            Recorder.extension()}"
+        unknown_packets_filename = (
+            f"{UNKNOWN_DATA_FILENAME}.{Recorder.extension()}"
+        )
         self.unknown_packets_recorder = Recorder(
             output_path / unknown_packets_filename,
             schema=unknown_packets_schema,
@@ -116,8 +117,9 @@ class Parser:
             "filename": signal_data_filename,
         } | self.signal_data.metadata
 
-        extension_command_data_filename = f"{EXTENSION_COMMAND_DATA_FILENAME}.{
-            Recorder.extension()}"
+        extension_command_data_filename = (
+            f"{EXTENSION_COMMAND_DATA_FILENAME}.{Recorder.extension()}"
+        )
         self.extension_command_data = ExtensionCommand(
             output_path / extension_command_data_filename,
             Recorder,
@@ -139,8 +141,9 @@ class Parser:
             "filename": ackr_data_filename,
         } | self.ackr_data.metadata
 
-        context_data_filename = f"{CONTEXT_DATA_FILENAME}.{
-            Recorder.extension()}"
+        context_data_filename = (
+            f"{CONTEXT_DATA_FILENAME}.{Recorder.extension()}"
+        )
         self.context_data = DataContext(
             output_path / context_data_filename,
             Recorder,
@@ -284,6 +287,6 @@ class Parser:
 
             try:
                 vita_payload = self.read_packet(stream)
-            except BaseException:
+            except Exception:
                 print(traceback.format_exc())
                 vita_payload = None

@@ -61,7 +61,9 @@ class PQWriter:
         if self.current_index != 0:
             self._record()
 
-        self.writer.close()
+        if self.writer is not None:
+            self.writer.close()
+
         self._closed = True
 
     @property

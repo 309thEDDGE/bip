@@ -1,6 +1,6 @@
 import importlib.metadata
-__version__ = importlib.metadata.version("bip")
+__version__ = importlib.metadata.version("saber-bip")
 
 
 def metadata():
-    return dict(importlib.metadata.metadata("bip"))
+    return dict(importlib.metadata.metadata("saber-bip"))
