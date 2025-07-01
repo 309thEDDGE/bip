@@ -88,16 +88,18 @@ class ProcessMessage:
         self.packet_id = 0
 
         if iq_type == 5:
-            packet_data_filename = f"{IQ5_PACKET_FILENAME}.{
-                Recorder.extension()}"
+            packet_data_filename = (
+                f"{IQ5_PACKET_FILENAME}.{Recorder.extension()}"
+            )
             self.packet_processor = ProcessIq5Packet(
                 output_path / packet_data_filename,
                 Recorder,
                 options=recorder_opts,
                 batch_size=10)
         else:
-            packet_data_filename = f"{IQ0_PACKET_FILENAME}.{
-                Recorder.extension()}"
+            packet_data_filename = (
+                f"{IQ0_PACKET_FILENAME}.{Recorder.extension()}"
+            )
             self.packet_processor = ProcessIq0Packet(
                 output_path / packet_data_filename,
                 Recorder,
