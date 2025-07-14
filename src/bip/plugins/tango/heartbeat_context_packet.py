@@ -121,7 +121,7 @@ class _HeartbeatContextPacket(ContextPacket):
 
         tsi = self.integer_timestamp
         tsf0, tsf1 = self.fractional_timestamp
-        self.time = bit_manipulation.time(tsi, tsf0, tsf1)
+        self.time = bit_manipulation.tango_time(tsi, tsf0, tsf1)
 
         self.tx_buffer_free_0 = int(self.words[7])
         self.tx_buffer_free_1 = int(self.words[8])

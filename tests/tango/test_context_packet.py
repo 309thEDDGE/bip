@@ -18,8 +18,8 @@ def simple_cp_packet():
         0x00000001, # 2 class id 0
         0x00010002, # 3 class id 1
         0x0000FFFF, # 4 tsi
-        0x00000001, # 5 tsf0
-        0x00000000, # 6 tsf1
+        0xBE991A83, # 5 tsf0
+        0x0000001C, # 6 tsf1
         0b00111000101001000000000000001110, # 7 cif0
         0b11010011000000000000000000010000, # 8 cif1
         0b00000000000000000000000110000000, # 9 cif2
@@ -80,7 +80,7 @@ def simple_cp_packet():
 
 
 def test_cp_packet_create(simple_cp_packet):
-    header, payload = simple_cp_packet
+    _, payload = simple_cp_packet
     packet = ContextPacket(payload)
     assert packet is not None
 
@@ -104,9 +104,9 @@ def test_cp_packet(simple_cp_packet):
 
     assert packet.integer_timestamp == 0xFFFF
 
-    assert packet.fractional_timestamp[0]== 0x00000001
-    assert packet.fractional_timestamp[1] == 0
-    assert packet.time == pytest.approx(65535.004294967296, 0.001)
+    assert packet.fractional_timestamp[0]== 3197704835
+    assert packet.fractional_timestamp[1] == 28
+    assert packet.time == pytest.approx(65535.123456789123, 0.000001)
     
     assert packet.bandwidth == pytest.approx((0.95 * 1e-12), 0.001)
     assert packet.if_reference_freq == pytest.approx((0.95 * 1e-12), 0.001)
@@ -116,7 +116,7 @@ def test_cp_packet(simple_cp_packet):
     assert packet.gain2 == pytest.approx(0.0078125, 0.001)
     assert packet.sample_rate == pytest.approx(16.779, 0.001)
     assert packet.temperature == pytest.approx(0.015625, 0.001)
-    assert packet.phase_offset == 0.0
+    assert np.isclose(packet.phase_offset, 0.0, rtol=1e-09, atol=1e-09)
     assert packet.ellipticity == pytest.approx(0.0, 0.001)
     assert packet.tilt == pytest.approx(0.656, 0.001)
     
@@ -124,14 +124,16 @@ def test_cp_packet(simple_cp_packet):
     assert packet.elevation_angle_0 == pytest.approx(0.0078125, 0.001)
     assert packet.steering_mode_0 == pytest.approx(1, 0.001)
     
-    assert packet.beam_width_vert == 0.0
-    assert packet.beam_width_horiz == 0.0
+    assert np.isclose(packet.beam_width_vert, 0.0, rtol=1e-09, atol=1e-09)
+    assert np.isclose(packet.beam_width_horiz, 0.0, rtol=1e-09, atol=1e-09)
     assert packet.range == pytest.approx(4456448.0, 1.0)  
 
     assert packet.health_status == 0x00007777
     assert packet.mode_id == 0xABCDEFAB
     assert packet.event_id == 0x01020304
-    assert packet.pulse_width == 0.175923202621440
+    assert np.isclose(packet.pulse_width,
+                      0.175923202621440,
+                      rtol=1e-09, atol=1e-09)
 
     assert packet.pri == pytest.approx(1e-15, 0.001)
     assert packet.duration == pytest.approx(1e-15, 0.001)

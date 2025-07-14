@@ -63,5 +63,13 @@ def sample_rate(word1, word2):
 
 @numba.jit(nopython=True)
 def time(tsi, tsf0, tsf1):
-    return np.float64(np.uint64(tsi) +
-                      ((np.uint64(tsf0) << 32) + np.uint64(tsf1)) * (10**-12))
+    timestamp_fractional = ((np.uint64(tsf0) << 32) + np.uint64(tsf1)) * (10**-12)
+
+    return np.float64(np.uint64(tsi) + timestamp_fractional)
+
+
+@numba.jit(nopython=True)
+def tango_time(tsi, tsf0, tsf1):
+    timestamp_fractional = ((np.uint64(tsf1) << 32) + np.uint64(tsf0)) * (10**-12)
+
+    return np.float64(np.uint64(tsi) + timestamp_fractional)

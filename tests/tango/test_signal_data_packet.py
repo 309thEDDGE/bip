@@ -16,15 +16,15 @@ def simple_data_packet():
         f.write(struct.pack("<I", 0x00000001)) #class id 0
         f.write(struct.pack("<I", 0xF0000000)) #class id 1
         f.write(struct.pack("<I", 0x0000FFFF)) #tsi
-        f.write(struct.pack("<I", 0x00000000)) #tsf0
-        f.write(struct.pack("<I", 0x10000000)) #tsf1
+        f.write(struct.pack("<I", 0xBE991A83)) #tsf0
+        f.write(struct.pack("<I", 0x0000001C)) #tsf1
         f.write(struct.pack("<I", 0x0A0B0C0D)) #data
         f.write(struct.pack("<I", 0xAAAAAAAA)) #trailer 0
         f.write(struct.pack("<I", 0xFFFFFFFF)) #trailer 1
         yield header, bytearray(f.getvalue())
 
 def test_data_packet_create(simple_data_packet):
-    header, payload = simple_data_packet
+    _, payload = simple_data_packet
     payload_size_words = 7
     
     packet = DataPacket(payload, payload_size_words)
@@ -53,11 +53,12 @@ def test_data_packet(simple_data_packet):
     packet = DataPacket(simple_data_packet[1], 7)
     assert packet.stream_id == 0x576EA41D
     assert packet.integer_timestamp == 0xFFFF
-    assert packet.fractional_timestamp[0] == 0
-    assert packet.fractional_timestamp[1] == 0x10000000
+    assert packet.fractional_timestamp[0]== 3197704835
+    assert packet.fractional_timestamp[1] == 28
+    assert packet.time == pytest.approx(65535.123456789123, 0.000001)
+    
     assert packet.trailer[0] == 0xAAAAAAAA
     assert packet.trailer[1] == 0xFFFFFFFF
-    assert packet.time == 65535.000268435455
 
 
 def test_data_packet_data(simple_data_packet):
@@ -76,8 +77,8 @@ def data_packet_multiple():
         f.write(struct.pack("<I", 0x00000001)) #class id 0
         f.write(struct.pack("<I", 0xF0000000)) #class id 1
         f.write(struct.pack("<I", 0x0000FFFF)) #tsi
-        f.write(struct.pack("<I", 0x00000000)) #tsf0
-        f.write(struct.pack("<I", 0x10000000)) #tsf1
+        f.write(struct.pack("<I", 0xBE991A83)) #tsf0
+        f.write(struct.pack("<I", 0x0000001C)) #tsf1
         f.write(struct.pack("<I", 0x0A0B0C0D)) #data
         f.write(struct.pack("<I", 0xA0B0C0D0)) #data
         f.write(struct.pack("<I", 0xCCDDAABB)) #data
@@ -105,8 +106,8 @@ def data_packet_notrailer():
         f.write(struct.pack("<I", 0x00000001)) #class id 0
         f.write(struct.pack("<I", 0xF0000000)) #class id 1
         f.write(struct.pack("<I", 0x0000FFFF)) #tsi
-        f.write(struct.pack("<I", 0x00000000)) #tsf0
-        f.write(struct.pack("<I", 0x10000000)) #tsf1
+        f.write(struct.pack("<I", 0xBE991A83)) #tsf0
+        f.write(struct.pack("<I", 0x0000001C)) #tsf1
         f.write(struct.pack("<I", 0x0A0B0C0D)) #data
         yield header, bytearray(f.getvalue())
 
@@ -125,15 +126,15 @@ def simple_data_packet_wrong_size():
         f.write(struct.pack("<I", 0x00000001)) #class id 0
         f.write(struct.pack("<I", 0xF0000000)) #class id 1
         f.write(struct.pack("<I", 0x0000FFFF)) #tsi
-        f.write(struct.pack("<I", 0x00000000)) #tsf0
-        f.write(struct.pack("<I", 0x10000000)) #tsf1
+        f.write(struct.pack("<I", 0xBE991A83)) #tsf0
+        f.write(struct.pack("<I", 0x0000001C)) #tsf1
         f.write(struct.pack("<I", 0x0A0B0C0D)) #data
         f.write(struct.pack("<I", 0xAAAAAAAA)) #trailer 0
         f.write(struct.pack("<I", 0xFFFFFFFF)) #trailer 1
         yield header, bytearray(f.getvalue())
 
 def test_data_packet_wrong_size_create(simple_data_packet_wrong_size):
-    header, payload = simple_data_packet_wrong_size
+    _, payload = simple_data_packet_wrong_size
     payload_size_words = 7
     
     packet = DataPacket(payload, payload_size_words)
@@ -162,11 +163,13 @@ def test_data_packet_wrong_size(simple_data_packet_wrong_size):
     packet = DataPacket(simple_data_packet_wrong_size[1], 7)
     assert packet.stream_id == 0x576EA41D
     assert packet.integer_timestamp == 0xFFFF
-    assert packet.fractional_timestamp[0] == 0
-    assert packet.fractional_timestamp[1] == 0x10000000
+    assert packet.fractional_timestamp[0]== 3197704835
+    assert packet.fractional_timestamp[1] == 28
+    assert packet.time == pytest.approx(65535.123456789123, 0.000001)
+    
     assert packet.trailer[0] == 0xAAAAAAAA
     assert packet.trailer[1] == 0xFFFFFFFF
-    assert packet.time == 65535.000268435455
+
 
 def test_data_packet_wrong_size_data(simple_data_packet_wrong_size):
     packet = DataPacket(simple_data_packet_wrong_size[1], 7)

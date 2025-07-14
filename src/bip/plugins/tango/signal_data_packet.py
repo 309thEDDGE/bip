@@ -64,7 +64,7 @@ class _SignalDataPacket(SignalDataPacket):
         super().__init__(payload, payload_size=payload_size, vendor='Tango')
         tsi = self.integer_timestamp
         tsf0, tsf1 = self.fractional_timestamp
-        self.time = bit_manipulation.time(tsi, tsf0, tsf1)
+        self.time = bit_manipulation.tango_time(tsi, tsf0, tsf1)
 
         if ("{stream_id}" in context_key):
             self.context_packet_key = context_key.format(
