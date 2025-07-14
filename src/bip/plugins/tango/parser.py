@@ -104,7 +104,8 @@ class Parser:
         } | self.bad_packets_recorder.metadata
 
         unknown_packets_filename = (
-            f"{UNKNOWN_PACKETS_FILENAME}.{Recorder.extension()}"
+            f"{UNKNOWN_PACKETS_FILENAME}."
+            f"{Recorder.extension()}"
         )
         self.unknown_packets_recorder = Recorder(
             output_path / unknown_packets_filename,
@@ -116,7 +117,8 @@ class Parser:
         } | self.bad_packets_recorder.metadata
 
         signal_data_filename = (
-            f"{SIGNAL_DATA_FILENAME}.{data_recorder.extension()}"
+            f"{SIGNAL_DATA_FILENAME}."
+            f"{data_recorder.extension()}"
         )
         self.signal_data = SignalData(
             output_path / signal_data_filename,
@@ -140,7 +142,8 @@ class Parser:
         } | self.context.metadata
 
         heartbeat_context_filename = (
-            f"{HEARTBEAT_CONTEXT_FILENAME}.{Recorder.extension()}"
+            f"{HEARTBEAT_CONTEXT_FILENAME}."
+            f"{Recorder.extension()}"
         )
         self.heartbeat_context = HeartbeatContext(
             output_path / heartbeat_context_filename,
@@ -153,7 +156,8 @@ class Parser:
         } | self.heartbeat_context.metadata
 
         gps_context_filename = (
-            f"{GPS_EXTENSION_CONTEXT_FILENAME}.{Recorder.extension()}"
+            f"{GPS_EXTENSION_CONTEXT_FILENAME}."
+            f"{Recorder.extension()}"
         )
         self.gps_context = GPSExtensionContext(
             output_path / gps_context_filename,

@@ -172,7 +172,7 @@ class _ContextPacket(ContextPacket):
 
         tsi = self.integer_timestamp
         tsf0, tsf1 = self.fractional_timestamp
-        self.time = bit_manipulation.time(tsi, tsf0, tsf1)
+        self.time = bit_manipulation.tango_time(tsi, tsf0, tsf1)
 
         self.cif0 = self.words[7]
         self.cif1 = self.words[8]

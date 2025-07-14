@@ -20,8 +20,8 @@ def simple_heartbeat_packet(): #needs to be heavily changed
         0x00000001, # 2 class id 0
         0x00010002, # 3 class id 1
         0x0000FFFF, # 4 tsi
-        0x00000000, # 5 tsf0
-        0x10000000, # 6 tsf1
+        0xBE991A83, # 5 tsf0
+        0x0000001C, # 6 tsf1
 
         #payload
         0x00000000, #7 tx_buffer_0
@@ -100,7 +100,7 @@ def simple_heartbeat_packet(): #needs to be heavily changed
 
 
 def test_heartbeat_packet_create(simple_heartbeat_packet):
-    header, payload = simple_heartbeat_packet
+    _, payload = simple_heartbeat_packet
     packet = HeartbeatContextPacket(payload)
     assert packet is not None
 
@@ -123,8 +123,9 @@ def test_heartbeat_packet(simple_heartbeat_packet):
     assert packet.stream_id == 0x576EA41D
 
     assert packet.integer_timestamp == 0xFFFF
-    assert packet.fractional_timestamp[0]== 0
-    assert packet.fractional_timestamp[1] == 0x10000000
+    assert packet.fractional_timestamp[0]== 3197704835
+    assert packet.fractional_timestamp[1] == 28
+    assert packet.time == pytest.approx(65535.123456789123, 0.000001)
 
     #This will need to be updated when we know reasonable values for these variables
     assert packet.tx_buffer_free_0 == 0.0
