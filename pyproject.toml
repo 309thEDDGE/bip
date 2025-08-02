@@ -12,7 +12,7 @@ requires-python = ">= 3.9"
 name = "saber-bip"
 description = "Parse Narrow-scope VITA 49.2 Data"
 
-version = "0.1.2-c"
+version = "0.1.3"
 dependencies = [
     "numpy>=2.0.0",
     "pandas",
