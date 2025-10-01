@@ -154,4 +154,4 @@ def test_bad_packet_size_smaller_than_stated():
     payload, payload_size = parser.read_packet(f)
 
     assert payload == 'BAD_PACKET'
-    assert payload_size == None
+    assert payload_size is None

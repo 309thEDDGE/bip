@@ -8,12 +8,13 @@ class DummyWriter:
     def extension() -> str:
         return "dummy"
 
-    def __init__(self,
-                 filename: Path,
-                 schema: pa.schema,
-                 options: dict = None,
-                 batch_size: int = 1000
-                 ):
+    def __init__(
+        self,
+        filename: Path,
+        schema: pa.schema = None,
+        options: dict = None,
+        batch_size: int = 1000
+    ):
 
         if options is None:
             options = {}

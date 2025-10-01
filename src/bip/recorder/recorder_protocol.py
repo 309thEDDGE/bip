@@ -6,11 +6,12 @@ import pyarrow as pa
 
 @runtime_checkable
 class Recorder(Protocol):
-    def __init__(self,
-                 filename: Path,
-                 schema: pa.Schema,
-                 options: dict = {}
-                 ):
+    def __init__(
+        self,
+        filename: Path,
+        schema: pa.Schema = None,
+        options: dict = None
+    ):
         """
         Records packets.
         """
@@ -30,9 +31,9 @@ class Recorder(Protocol):
         """
         pass
 
-    def add_record(self, record: dict):
+    def add_record(self, record: dict, dwell_key: int = None):
         """
-        Add a record to the recorder, to be written to the output.
+        Add a record to this recorder.
         """
         pass
 

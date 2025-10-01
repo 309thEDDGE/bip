@@ -64,6 +64,11 @@ class Parser:
         self._eom_length = IQ0_EOM_BYTES
         self._closed = False
 
+        if not data_recorder:
+            self.data_recorder = Recorder
+        else:
+            self.data_recorder = data_recorder
+
     @property
     def metadata(self) -> dict:
         return {
@@ -92,10 +97,11 @@ class Parser:
 
         self.message_processor = ProcessMessage(
             self._output_path,
-            self._recorder,
+            self.data_recorder,
             options=self._recorder_options,
             batch_size=10,
-            iq_type=iq_type)
+            iq_type=iq_type
+        )
         self.options["message_data"] = {
             "filename": message_data_filename
         } | self.message_processor.metadata

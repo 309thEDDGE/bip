@@ -1,5 +1,3 @@
-import pytest
-
 import numpy as np
 import pyarrow as pa
 import pandas as pd
@@ -40,6 +38,7 @@ def test_add_record(tmp_path):
     assert df.id.iloc[0] == 1
     assert df.val.iloc[0] == 1
 
+
 def test_add_batch(tmp_path):
     file_ = tmp_path / "test.parquet"
 
@@ -56,6 +55,7 @@ def test_add_batch(tmp_path):
     df = pd.read_parquet(file_)
     assert (df.id.to_numpy() == np.array(range(10), dtype=np.int32)).all()
     assert (df.val.to_numpy() == np.array(range(10), dtype=np.int32)).all()
+
 
 def test_zip(tmp_path):
     file_ = tmp_path / "test.parquet"
@@ -74,6 +74,7 @@ def test_zip(tmp_path):
     assert (df.id.to_numpy() == np.array(range(10), dtype=np.int32)).all()
     assert (df.val.to_numpy() == np.array(range(10), dtype=np.int32)).all()
 
+
 def test_metadata(tmp_path):
     file_ = tmp_path / "test.parquet"
 
@@ -91,6 +92,3 @@ def test_metadata(tmp_path):
     assert metadata["batch_size"] == 3
     assert metadata["options"]["compression"] == "GZIP"
     assert metadata["options"]["compression_level"] == 5
-
-
-

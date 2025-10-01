@@ -74,6 +74,9 @@ class Parser:
         self._unknown_packets = 0
         self._closed = False
 
+        if not data_recorder:
+            data_recorder = Recorder
+
         framing_data_filename = f"{FRAME_DATA_FILENAME}.{Recorder.extension()}"
         self.recorder = Recorder(
             output_path / framing_data_filename,
@@ -106,13 +109,14 @@ class Parser:
             "filename": unknown_packets_filename,
         } | self.unknown_packets_recorder.metadata
 
-        signal_data_filename = f"{SIGNAL_DATA_FILENAME}.{Recorder.extension()}"
+        signal_data_filename = f"{SIGNAL_DATA_FILENAME}.{data_recorder.extension()}"
         self.signal_data = SignalData(
             output_path / signal_data_filename,
-            Recorder,
+            data_recorder,
             recorder_opts,
             batch_size=1000,
-            clean=self.clean)
+            clean=self.clean
+        )
         self.options["signal_data"] = {
             "filename": signal_data_filename,
         } | self.signal_data.metadata
