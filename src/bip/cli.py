@@ -9,7 +9,9 @@ from pathlib import Path
 from bip.__version__ import __version__ as version
 from bip.parse import parse_bin
 from bip.recorder.parquet.pqwriter import PQWriter
-from bip.recorder.partitioned_parquet.partitioned_pqwriter import new_partitioned_parquet_writer
+from bip.recorder.partitioned_parquet.partitioned_pqwriter import PartitionedPQWriter
+from bip.recorder.dwell.dwell_pqwriter import DwellPQWriter
+from bip.recorder.dwell.mikelima_dwell_pqwriter import MikelimaDwellPQWriter
 import bip.plugins
 
 
@@ -19,6 +21,34 @@ def _find_plugins():
         for finder, name, _
         in pkgutil.iter_modules(bip.plugins.__path__, bip.plugins.__name__ + ".")
     }
+
+
+def pre_validate_args(args):
+    output_directory = args.output
+    input_file = args.input
+
+    input_path = Path(input_file)
+    output_path = Path(output_directory)
+
+    if not output_path.exists():
+        if args.force:
+            output_path.mkdir(exist_ok=True, parents=True)
+            assert output_path.exists()
+        else:
+            print(f"{output_directory} not found")
+            sys.exit(1)
+
+    if not output_path.is_dir():
+        print(f"{output_directory} is not a directory")
+        sys.exit(1)
+
+    if not input_path.exists():
+        print(f"{input_file} not found")
+        sys.exit(1)
+
+    if args.compression_level is not None and args.compression is None:
+        print("compression level specified with no compression codec")
+        sys.exit(1)
 
 
 def main():
@@ -93,63 +123,56 @@ def main():
         required=False,
         default="WARNING",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="The level of logging you want in the log file.")
+        help="The level of logging you want in the log file."
+    )
+    argparser.add_argument(
+        "--dwell-output",
+        action="store_true"
+    )
 
     args = argparser.parse_args()
+
+    pre_validate_args(args)
+
     input_file = args.input
     output_directory = args.output
 
     input_path = Path(input_file)
-    if not input_path.exists():
-        print(f"{input_file} not found")
-        sys.exit(1)
-
     output_path = Path(output_directory)
-    if not output_path.exists():
-        if args.force:
-            output_path.mkdir(exist_ok=True, parents=True)
-            assert output_path.exists()
-        else:
-            print(f"{output_directory} not found")
-            sys.exit(1)
-
-    if not output_path.is_dir():
-        print(f"{output_directory} is not a directory")
-        sys.exit(1)
 
     recorder_opts = {}
     if args.compression_level is not None:
-        if args.compression is None:
-            print("compression level specified with no compression codec")
-            sys.exit(1)
         recorder_opts["compression_level"] = args.compression_level
 
     if args.compression is not None:
         recorder_opts["compression"] = args.compression.upper()
 
     plugin = plugins[f"bip.plugins.{args.parser}"]
-    data_recorder = (
-        new_partitioned_parquet_writer(['data_key'])
-        if args.partition_data
-        else PQWriter
-    )
+
+    if args.parser == "mikelima" and args.dwell_output:
+        data_recorder = MikelimaDwellPQWriter
+    elif args.dwell_output:
+        data_recorder = DwellPQWriter
+    elif args.partition_data:
+        data_recorder = PartitionedPQWriter
+    else:
+        data_recorder = PQWriter
 
     log_level = getattr(logging, args.log_level.upper())
 
-    try:
-        parser = plugin.Parser(
-            input_path,
-            output_path,
-            PQWriter,
-            log_level,
-            recorder_opts=recorder_opts,
-            data_recorder=data_recorder,
-            clean=args.clean,
-            orphan_context_key=args.partition_orphan_key,
-            context_key_function=lambda k: f"{args.partition_key_prefix}{k}"
-        )
-    except Exception as e:
-        raise RuntimeError(f"invalid plugin {args.parser}: {str(e)}")
+    # We don't have to check if the plugin exists, because we've set up
+    # argparse to only allow choices that exist.
+    parser = plugin.Parser(
+        input_path,
+        output_path,
+        PQWriter,
+        log_level,
+        recorder_opts=recorder_opts,
+        data_recorder=data_recorder,
+        clean=args.clean,
+        orphan_context_key=args.partition_orphan_key,
+        context_key_function=lambda k: f"{args.partition_key_prefix}{k}"
+    )
 
     parse_bin(parser, input_path, output_path)
 

@@ -10,12 +10,16 @@ class PQWriter:
     def extension() -> str:
         return "parquet"
 
-    def __init__(self,
-                 filename: Path,
-                 schema: pa.schema,
-                 options: dict = {},
-                 batch_size: int = 1000
-                 ):
+    def __init__(
+        self,
+        filename: Path,
+        schema: pa.schema = None,
+        options: dict = None,
+        batch_size: int = 1000
+    ):
+
+        if options is None:
+            options = {}
 
         self._closed = False
 
@@ -36,10 +40,14 @@ class PQWriter:
     def _record(self):
         df = pd.DataFrame(self.data)
         table = pa.Table.from_pandas(df)
+        if not self.schema:
+            self.schema = pa.Schema.from_pandas(df)
+
         try:
             if self.writer is None:
                 self.writer = pq.ParquetWriter(
-                    self._filename, self.schema, **self._options)
+                    self._filename, self.schema, **self._options
+                )
             self.writer.write_table(table)
         except Exception as e:
             print(f"Error writing file: {e}, {self._filename}")
@@ -47,7 +55,7 @@ class PQWriter:
         self.data = []
         self.current_index = 0
 
-    def add_record(self, record: dict):
+    def add_record(self, record: dict, _: int = None):
         assert self.current_index < self.batch_size
         self.data.append(record)
         self.current_index += 1

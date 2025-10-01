@@ -6,13 +6,13 @@ import numpy as np
 from bip.vita import ContextPacket
 from bip.common import bit_manipulation
 
-# TODO: 64 bit values seem to be packed backwards instead of
+# Note: 64 bit values seem to be packed backwards instead of
 #      [MSW, LSW] as called out in vita49.2 this looks like [LSW, MSW] at
 #      least to make the number realistic
-# TODO: related.  packing of two 16bits in a 32 needs sorted out.
+# Note: related. Packing of two 16bits in a 32 needs sorted out.
 #
 
-# TODO: keep this up to date
+# Important: keep this up to date
 ##
 # My reading of the spec / reverse engineering the one sample has this
 # for the layout of the context packets

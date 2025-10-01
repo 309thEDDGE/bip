@@ -83,6 +83,7 @@ class SignalData:
                    ):
         assert isinstance(packet, _SignalDataPacket)
         header = packet.packet_header
+        stream_id = np.uint32(packet.stream_identifier)
 
         self.recorder.add_record({
             "packet_id": np.uint32(self.packet_id),
@@ -96,7 +97,7 @@ class SignalData:
             "tsf0": np.uint32(packet.fractional_timestamp[0]),
             "tsf1": np.uint32(packet.fractional_timestamp[1]),
             "time": np.float64(packet.time + 1546300800),
-            "stream_id": np.uint32(packet.stream_identifier),
+            "stream_id": stream_id,
             "classId0": np.uint32(packet.classId0),
             "classId1": np.uint32(packet.classId1),
             "sample_count": np.uint32(packet.sample_count),
@@ -105,7 +106,7 @@ class SignalData:
             "packet_index": np.uint32(packet_index),
             "samples_i": packet.data[:, 0],
             "samples_q": packet.data[:, 1]
-        })
+        }, dwell_key=stream_id)
 
     def process(self,
                 payload: bytes,

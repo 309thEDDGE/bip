@@ -8,13 +8,13 @@ from bip.recorder.parquet.pqwriter import PQWriter
 
 
 class PartitionedPQWriter(PQWriter):
-    def __init__(self,
-                 filename: Path,
-                 schema: pa.schema,
-                 partition_cols,
-                 options: dict = {},
-                 batch_size: int = 1000,
-                 ):
+    def __init__(
+        self,
+        filename: Path,
+        schema: pa.schema,
+        options: dict = None,
+        batch_size: int = 1000,
+    ):
         """
         `existing_data_behavior` can be any of:
             "delete_matching" - delete an existing dataset at the same path
@@ -24,15 +24,18 @@ class PartitionedPQWriter(PQWriter):
         `options['partition_cols'] MUST be set for this recorder
         """
 
-        super(
-            PartitionedPQWriter,
-            self).__init__(
+        super(PartitionedPQWriter, self).__init__(
             filename,
             schema,
             options,
-            batch_size)
+            batch_size
+        )
 
-        self._partition_cols = partition_cols
+    def add_record(self, record, dwell_key: int = None):
+        # deal with Nones
+        dwell_key = dwell_key or 0
+        record["data_key"] = dwell_key
+        return super().add_record(record, dwell_key)
 
     def _record(self):
         df = pd.DataFrame(self.data)
@@ -42,7 +45,7 @@ class PartitionedPQWriter(PQWriter):
             self._filename,
             schema=self.schema,
             existing_data_behavior="overwrite_or_ignore",
-            partition_cols=self._partition_cols,
+            partition_cols=["data_key"],
             **self._options
         )
 
@@ -57,20 +60,3 @@ class PartitionedPQWriter(PQWriter):
             self._record()
 
         self._closed = True
-
-
-def new_partitioned_parquet_writer(
-    partition_cols
-):
-    def constructor(filename, schema, options={}, batch_size=1000):
-        return PartitionedPQWriter(
-            filename,
-            schema,
-            partition_cols,
-            options=options,
-            batch_size=batch_size
-        )
-
-    constructor.extension = PartitionedPQWriter.extension
-
-    return constructor
