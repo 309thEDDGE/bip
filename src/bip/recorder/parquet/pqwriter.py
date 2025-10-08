@@ -55,7 +55,7 @@ class PQWriter:
         self.data = []
         self.current_index = 0
 
-    def add_record(self, record: dict, _: int = None):
+    def add_record(self, record: dict, **kwargs):
         assert self.current_index < self.batch_size
         self.data.append(record)
         self.current_index += 1
