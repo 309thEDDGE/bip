@@ -3,7 +3,6 @@ import pyarrow as pa
 import pandas as pd
 from bip.recorder.parquet.pqwriter import PQWriter
 
-
 def test_extension():
     assert PQWriter.extension() == "parquet"
 
@@ -92,3 +91,26 @@ def test_metadata(tmp_path):
     assert metadata["batch_size"] == 3
     assert metadata["options"]["compression"] == "GZIP"
     assert metadata["options"]["compression_level"] == 5
+
+
+def test_recorder_writes_on_delete(tmp_path):
+    file_ = tmp_path / "test.parquet"
+
+    writer = PQWriter(file_,
+            pa.schema([("id", pa.int32()), ("val", pa.int32())]),
+            options={"compression": "GZIP", "compression_level": 5},
+            batch_size = 3)
+
+    for i in range(1):
+        writer.add_record({"id": np.int32(i), "val": np.int32(i)})
+
+    # Writer should not have created the parquet file because
+    # fewer than `batch_size` records have been written.
+    assert not file_.exists()
+
+    del writer
+
+    assert file_.exists()
+
+    # Make sure this is a valid parquet file
+    pd.read_parquet(file_)

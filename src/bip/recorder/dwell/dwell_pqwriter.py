@@ -162,3 +162,7 @@ class DwellPQWriter:
             "options": self._options,
             "batch_size": self.batch_size
         }
+
+    def __del__(self):
+        if not self._closed:
+            self.close()

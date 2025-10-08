@@ -197,3 +197,32 @@ def test_add_batch_multiple_dwells_in_order(tmp_path):
         dwell_df = pd.read_parquet(row.filename)
         assert (dwell_df.samples_i == np.concat(dwell_samples_i[dwell_key])).all()
         assert (dwell_df.samples_q == np.concat(dwell_samples_q[dwell_key])).all()
+
+
+def test_recorder_writes_on_delete(tmp_path):
+    file_ = tmp_path / "test_data_dir"
+
+    writer = DwellPQWriter(
+        file_,
+        batch_size = 3
+    )
+
+    for i in range(1):
+        writer.add_record({
+            "id": np.int32(i),
+            "val": np.int32(i),
+            "samples_i": np.zeros(1),
+            "samples_q": np.zeros(1),
+            "time": 0
+        })
+
+    # Writer should not have created the parquet file because
+    # fewer than `batch_size` records have been written.
+    assert not file_.exists()
+
+    del writer
+
+    assert file_.exists()
+
+    # Make sure this is a valid parquet file
+    pd.read_parquet(file_)
